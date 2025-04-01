@@ -6,3 +6,29 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+
+/* .cm-formatting-list-ol.cm-list-2:before {
+    content: "2. ";
+} */
+
+.blah {
+    background-color: red;
+}
+
+/* 
+.ol li {
+    list-style-type: upper-alpha;
+    color: blue;
+}
+
+.cm-list-2 {
+    color: blue !important;
+}
+
+.cm-formatting-list-ol.cm-list-2:nth-child(3):before {
+    content: "1. ";
+}
+.cm-formatting-list-ol.cm-list-2 .list-number {
+    font-size: 0;
+} */
