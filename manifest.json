@@ -3,7 +3,7 @@
 	"name": "LawList",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Adds support for advanced ordered lists (e.g. German legal opinion style) in Obsidian.",
+	"description": "Adds support for advanced ordered lists in Obsidian Edit Mode / Life Preview.",
 	"author": "Willem Schlieter",
 	"authorUrl": "https://obsidian.md",
 	"fundingUrl": "https://obsidian.md/pricing",
