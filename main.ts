@@ -5,7 +5,7 @@
 
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { lawlistCMPlugin } from 'view_plugin';
-import { store } from 'store';
+import { store } from 'patterns';
 
 interface LawListSettings {
 	patterns: string[]
@@ -19,6 +19,7 @@ export default class LawListPlugin extends Plugin {
 	settings: LawListSettings;
 
 	async onload() {
+		// Load saved settings
 		await this.loadSettings();
 
 		// Register the view plugin.
@@ -26,6 +27,7 @@ export default class LawListPlugin extends Plugin {
 
 		// Add the settings tab for style customisation.
 		this.addSettingTab(new SampleSettingTab(this.app, this));
+
 	}
 
 	onunload() {
@@ -34,6 +36,7 @@ export default class LawListPlugin extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		store.patterns = this.settings.patterns;
 	}
 
 	async saveSettings() {
@@ -57,17 +60,27 @@ class SampleSettingTab extends PluginSettingTab {
 		containerEl.createEl("h2", { text: "LawList Settings" });
 		const desc = containerEl.createEl("p");
 		desc.classList.add("lawlist-settings-desc");
-		desc.appendText("Customize the enumeration style for ordered lists! For every indentation level, simply type in the first enumerator, such as ");
+		desc.appendText("Customize the enumeration style for ordered lists! For every indentation level, type in a style pattern, which is simply the first enumerator, such as ");
 		desc.appendChild(createEl("code", { text: "1. " }));
 		desc.appendText(", ");
 		desc.appendChild(createEl("code", { text: "(a) " }));
 		desc.appendText(" or ");
 		desc.appendChild(createEl("code", { text: "i) " }));
 		desc.appendText(" (roman numbers.)");
+		desc.appendChild(createEl("br"));
+		desc.appendChild(createEl("br"));
+		desc.appendText("Fallback style for layers without specification is '1. '.")
+		desc.appendChild(createEl("br"));
+		desc.appendChild(createEl("br"));
+		desc.appendText("You can also customize the style for a single list item by typing the style pattern inside curly braces at the start of the list item. Example: ");
+		desc.appendChild(createEl("code", { text: "1. {a. }Text text text." }));
+		desc.appendText(" would be displayed as ");
+		desc.appendChild(createEl("code", { text: "a. Text text text." }));
+
 
 		for (let i = 0; i < 10; i++ ) {
 			new Setting(containerEl)
-				.setName(`Ebene ${i}`)
+				.setName(`Level ${i}`)
 				// .setDesc('It\'s a secret')
 				.addText(text => text
 					.setPlaceholder('1. ')

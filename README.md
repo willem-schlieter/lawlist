@@ -20,11 +20,13 @@ particularly annoyed by this functionality missing. It felt like a nerdy thing, 
 I found some people searching for that online, so it seems like people do need it.
 
 ## Known bugs / issues / missing features
+
 - No effects in Read Mode / PDF Export yet.
-- Layout: Enumerators are shifted a bit left, compared to the native numbering. This
-makes the layout a bit strange if you mix in unordered list items (with "-").
-- If you type in "1.", the list item is recognised and visually converted as expected,
-but the cursor is (visually, not really) placed in front of the enumerator.
-- If you type in "1. " (the above, now with trailing space), the list item is not
-recognised by the plugin anymore, so there is no conversion, you just see "1. ".
-Once you start typing text, everything works fine.
+- Would be nice if the enumerators could be positioned according to their width, so that
+the actual text in the list item always starts at the same X position. (Currently, e.g. 
+text in a li with number 10. starts a bit later because "10." is larger than "9.".)
+
+## Using this plugin
+
+Currently, the plugin is not published to Obsidian, so to use it, clone this repository,
+place it into the vault folder at `.obsidian/plugins` and build using `npm run build`.

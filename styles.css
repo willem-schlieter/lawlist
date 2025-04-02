@@ -1,7 +1,8 @@
 .lawlist-olchar {
     color: grey;
-    margin-right: -20px;
-    /* text-align: right; Did not solve the layout problem that my olchars are too far left. */
+    /* border: 1px solid green;
+    box-sizing: border-box; */
+    padding-left: 18px;
 }
 .lawlist-settings-desc code {
     background-color: #444;
