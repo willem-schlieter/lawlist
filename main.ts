@@ -81,7 +81,6 @@ class SampleSettingTab extends PluginSettingTab {
 		for (let i = 0; i < 10; i++ ) {
 			new Setting(containerEl)
 				.setName(`Level ${i}`)
-				// .setDesc('It\'s a secret')
 				.addText(text => text
 					.setPlaceholder('1. ')
 					.setValue(this.plugin.settings.patterns[i] || "")
