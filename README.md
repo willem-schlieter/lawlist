@@ -32,7 +32,13 @@ place it into the vault folder at `.obsidian/plugins` and build using `npm run b
 
 ## Known bugs / issues / missing features
 
-- No effects in Read Mode / PDF Export yet.
+- In Read Mode, in-text custom patterns have no effect, instead, fallback is the global
+setting.
+- In Read Mode, nested lists that start with another enumerator than 0 are not recognised.
+This is not really possible to solve as the Markdown engine does not recognise those as lists
+at all. Lists starting with higher numbers are only supported at indentation level 0.
 - Would be nice if the enumerators could be positioned according to their width, so that
 the actual text in the list item always starts at the same X position. (Currently, e.g. 
 text in a li with number 10. starts a bit later because "10." is larger than "9.".)
+- Would be nice if custom style patterns could be defined for a particular document, not only
+globally.
