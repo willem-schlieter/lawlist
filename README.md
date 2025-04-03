@@ -1,3 +1,7 @@
+# NEWS!
+
+Read Mode now supported!
+
 # LawList: advanced ordered lists in Edit Mode
 
 Obsidian natively only supports ordered lists with enumeration style "1. ".
