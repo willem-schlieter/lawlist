@@ -19,7 +19,6 @@ export default class LawListPlugin extends Plugin {
 	settings: LawListSettings;
 
 	async onload() {
-		console.log("Hello from LawList - Custom Ordered Lists!");
 		// Load saved settings
 		await this.loadSettings();
 
@@ -139,7 +138,7 @@ class SampleSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "LawList Settings" });
+		new Setting(containerEl).setName("LawList: Custom List Styles").setHeading();
 		const desc = containerEl.createEl("p");
 		desc.classList.add("lawlist-settings-desc");
 		desc.appendText("Customize the enumeration style for ordered lists! For every indentation level, type in a style pattern, which is simply the first enumerator, such as ");
