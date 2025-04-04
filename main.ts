@@ -78,7 +78,7 @@ export default class LawListPlugin extends Plugin {
 				if (listItems.length === 0) return;
 				
 				// Else, we need to detect if this mainContainer has already been touched by the plugin.
-				let mcid = Number.parseInt((mainContainer.className.match(/lawlist-mcid-(\d*)/) || [, ""])[1]);
+				let mcid = Number.parseInt((mainContainer.className.match(/lawlist-mcid-(\d*)/) || [, ""])[1] || "");
 				// If there is no mainContainer id, this is the first encounter with this mainContainer.
 				if (Number.isNaN(mcid)) {
 					console.log("maincontainer never touched: ", mainContainer);
