@@ -1,11 +1,10 @@
 {
 	"id": "lawlist",
-	"name": "LawList",
+	"name": "LawList: Custom List Styles",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Adds support for advanced ordered lists in Obsidian Edit Mode / Life Preview.",
+	"description": "Adds support for custom lists styles in Obsidian (Edit Mode and Read Mode).",
 	"author": "Willem Schlieter",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"authorUrl": "https://github.com/willem-schlieter",
 	"isDesktopOnly": false
 }

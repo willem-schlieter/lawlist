@@ -19,6 +19,7 @@ export default class LawListPlugin extends Plugin {
 	settings: LawListSettings;
 
 	async onload() {
+		console.log("Hello from LawList - Custom Ordered Lists!");
 		// Load saved settings
 		await this.loadSettings();
 
@@ -81,7 +82,6 @@ export default class LawListPlugin extends Plugin {
 				let mcid = Number.parseInt((mainContainer.className.match(/lawlist-mcid-(\d*)/) || [, ""])[1] || "");
 				// If there is no mainContainer id, this is the first encounter with this mainContainer.
 				if (Number.isNaN(mcid)) {
-					console.log("maincontainer never touched: ", mainContainer);
 					// So we assign an mcid…
 					mcid = mainContainerCounter ++;
 					mainContainer.classList.add("lawlist-mcid-" + mcid);
@@ -159,7 +159,7 @@ class SampleSettingTab extends PluginSettingTab {
 		desc.appendText(" would be displayed as ");
 		desc.appendChild(createEl("code", { text: "a. Text text text." }));
 
-		for (let i = 0; i < 10; i++ ) {
+		for (let i = 0; i < 11; i++ ) {
 			new Setting(containerEl)
 				.setName(`Level ${i}`)
 				.addText(text => text

@@ -32,4 +32,9 @@ export function parsePattern(pattern: string, enumerator: number): string {
         .replaceAll("i", ROMAN[enumerator - 1].toLowerCase() || enumerator.toString())
         .replaceAll("A", ALPHA[enumerator - 1] || enumerator.toString())
         .replaceAll("a", ALPHA[enumerator - 1].toLowerCase() || enumerator.toString());
+        
+        //
+        // This would be the place to implement other numbering systems!
+        //
+
 }
