@@ -1,6 +1,6 @@
 /**
- * This just contains some framework stuff and the settings tab.
- * For the actual functionality, see `view_plugin.ts`.
+ * This contains some setup stuff and the Markdown Post Processor for Read Mode.
+ * For the functionality in Edit Mode, see view_plugin.ts.
  */
 
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
@@ -10,6 +10,9 @@ import { store, parsePattern } from 'patterns';
 interface LawListSettings {
 	patterns: string[]
 }
+
+// <style> element to save the enumerator color
+// const markStyleEl = document.head.createEl("style");
 
 const DEFAULT_SETTINGS: LawListSettings = {
 	patterns: []
@@ -24,7 +27,6 @@ export default class LawListPlugin extends Plugin {
 
 		// Add the settings tab for style customisation.
 		this.addSettingTab(new LawListSettingsTab(this.app, this));
-
 		// Register the view plugin (fror Edit Mode).
 		this.registerEditorExtension(lawListCMViewPlugin);
 		
@@ -68,10 +70,11 @@ export default class LawListPlugin extends Plugin {
 						parent = parent.parentElement;
 					}
 
-					// Next, get all the LIs that are direct children of that OL
-					const lis = Array.from(ol.children).filter(e => e.tagName === "LI");
-					// Register the LIs to "listItems"
-					lis.forEach((li, index) => listItems.push({li, ix: index + ol.start, level}));
+					// Next, get all the LIs that are direct children of that OL…
+					Array.from(ol.children)
+					.filter(e => e.tagName === "LI")
+					// …and register them to "listItems":
+					.forEach((li, index) => listItems.push({li, ix: index + ol.start, level}));
 				});
 
 				// If there are no listItems inside this mainContainer, it is irrelevant to the plugin and can be skipped.
@@ -79,6 +82,9 @@ export default class LawListPlugin extends Plugin {
 				
 				// Else, we need to detect if this mainContainer has already been touched by the plugin.
 				let mcid = Number.parseInt((mainContainer.className.match(/lawlist-mcid-(\d*)/) || [, ""])[1] || "");
+				// (We need to give the mainContainer an ID to identify the LIs inside, as
+				// there might be more than one lists in the document, resulting in different
+				// mainContainers ("el ol" nodes).)
 				// If there is no mainContainer id, this is the first encounter with this mainContainer.
 				if (Number.isNaN(mcid)) {
 					// So we assign an mcid…
@@ -86,10 +92,9 @@ export default class LawListPlugin extends Plugin {
 					mainContainer.classList.add("lawlist-mcid-" + mcid);
 					// …and a <style>.
 					stylesheets[mcid] = document.head.appendChild(document.createElement("style"));
+					// PROBLEM with this "first encounter idea": see above.
+					// But the mcid remains necessary, just the stylesheet registration thing is useless.
 				}
-				// First, we need to give the mainContainer an ID to identify the LIs inside.
-				// (There might be more than one list in the document, resulting in different
-				// mainContainers ("el ol" nodes).)
 
 				// Now we have to give every LI a unique ID and style it according to its ix and level
 				// by dynamically filling the <style> to adress all the LIs individually.
@@ -99,13 +104,25 @@ export default class LawListPlugin extends Plugin {
 				while (sheet.cssRules.length) sheet.deleteRule(0);
 				// And generate it again. (Else, we would clutter up the stylesheet with unused rules.)
 				listItems.forEach((item, id) => {
+					const textNode = Array.from(item.li.childNodes).filter(c => c.nodeType === Node.TEXT_NODE)[0];
+					let inlineConfig: string;
+					if (textNode) {
+						inlineConfig = (textNode.textContent?.match(/^\{(.*)\}/) || [, ""])[1] || "";
+						// Hide the inlineConfig
+						if (inlineConfig) textNode.textContent = (textNode.textContent || "").slice(inlineConfig.length + 2);
+						// If inlineConfig is "!", ignore this LI.
+						if (inlineConfig === "!") return;
+					} else {
+						inlineConfig = "";
+					}
+
 					// Assign an individual id to the LI.
 					// The id class needs to contain the mcid as well, otherwise, there could be several
 					// LIs with the same LI id, as the postProcessor only touches one mainContainer at a time.
 					item.li.classList.add(`lawlist-li-mcid-${mcid}-id-${id}`);
 					// Insert CSS rule to style the LI according to the pattern configured in the settings tab.
 					// (In-Text custom patterns not supported yet.)
-					sheet.insertRule(`.lawlist-li-mcid-${mcid}-id-${id}::marker { content: "${parsePattern(store.patterns[item.level] || "1. ", item.ix)}" }`, sheet.cssRules.length);
+					sheet.insertRule(`.lawlist-li-mcid-${mcid}-id-${id}::marker { content: "${parsePattern(inlineConfig || store.patterns[item.level] || "1. ", item.ix)}" }`, sheet.cssRules.length);
 				});
 			}
 		})());
@@ -157,6 +174,17 @@ class LawListSettingsTab extends PluginSettingTab {
 		desc.appendChild(createEl("code", { text: "1. {a. }Text text text." }));
 		desc.appendText(" would be displayed as ");
 		desc.appendChild(createEl("code", { text: "a. Text text text." }));
+
+		// new Setting(containerEl)
+		// 	.setName("Mark enumerators")
+		// 	.setDesc("Mark enumerators that are modified by LawList in green instead of the standard list number color.")
+		// 	.addToggle(toggle => toggle
+		// 		.setValue(false)
+		// 		.onChange(async mark => {
+		// 			markStyleEl.sheet?.deleteRule(0);
+		// 			markStyleEl.sheet?.insertRule("");
+		// 		})
+		// 	);
 
 		for (let i = 0; i < 11; i++ ) {
 			new Setting(containerEl)

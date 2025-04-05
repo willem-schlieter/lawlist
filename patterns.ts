@@ -13,9 +13,11 @@ export const store: {
     /**
      * The enumerator patterns (such as `1. ` or `(A) `) for all indentation levels.
      */
-    patterns: string[]
+    patterns: string[],
+    mark: boolean
 } = {
-    patterns: []
+    patterns: [],
+    mark: false
 }
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
