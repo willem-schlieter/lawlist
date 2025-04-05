@@ -4,7 +4,7 @@
  */
 
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { lawlistCMPlugin } from 'view_plugin';
+import { lawListCMViewPlugin } from 'view_plugin';
 import { store, parsePattern } from 'patterns';
 
 interface LawListSettings {
@@ -23,10 +23,10 @@ export default class LawListPlugin extends Plugin {
 		await this.loadSettings();
 
 		// Add the settings tab for style customisation.
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new LawListSettingsTab(this.app, this));
 
 		// Register the view plugin (fror Edit Mode).
-		this.registerEditorExtension(lawlistCMPlugin);
+		this.registerEditorExtension(lawListCMViewPlugin);
 		
 		// Create and register a MarkdownPostProcessor (for Read Mode).
 		this.registerMarkdownPostProcessor((function(){
@@ -126,7 +126,7 @@ export default class LawListPlugin extends Plugin {
 	}
 }
 
-class SampleSettingTab extends PluginSettingTab {
+class LawListSettingsTab extends PluginSettingTab {
 	plugin: LawListPlugin;
 
 	constructor(app: App, plugin: LawListPlugin) {

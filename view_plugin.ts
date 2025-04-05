@@ -17,9 +17,8 @@ import {
 } from '@codemirror/view';
 import { parsePattern, store } from "patterns";
 import type { SyntaxNode, SyntaxNodeRef } from "@lezer/common";
-import { text } from 'stream/consumers';
 
-class LawListWidget extends WidgetType {
+class LawListEnumeratorWidget extends WidgetType {
     constructor (private enumerator: number, private indentLevel: number, private customPattern?: string) { super(); }
     toDOM(view: EditorView): HTMLElement {
         // There is some weird layout stuff going on at the moment. Enumerators are too far left, idk why.
@@ -34,7 +33,7 @@ class LawListWidget extends WidgetType {
     }
 }
 
-class LawlistCMPlugin implements PluginValue {
+class LawListCMViewPlugin implements PluginValue {
     decorations: DecorationSet;
 
     constructor(view: EditorView) {
@@ -77,7 +76,7 @@ class LawlistCMPlugin implements PluginValue {
                                 node.from,
                                 node.to + custom.length + 2,
                                 Decoration.replace({
-                                    widget: new LawListWidget(enumerator, indentLevel -1, custom)
+                                    widget: new LawListEnumeratorWidget(enumerator, indentLevel -1, custom)
                                 })
                             );
                         } else {
@@ -85,7 +84,7 @@ class LawlistCMPlugin implements PluginValue {
                                 node.from,
                                 node.to,
                                 Decoration.replace({
-                                    widget: new LawListWidget(enumerator, indentLevel - 1)
+                                    widget: new LawListEnumeratorWidget(enumerator, indentLevel - 1)
                                 })
                             );
                         }
@@ -98,11 +97,11 @@ class LawlistCMPlugin implements PluginValue {
     }
 }
 
-const pluginSpec: PluginSpec<LawlistCMPlugin> = {
-    decorations: (value: LawlistCMPlugin) => value.decorations,
+const pluginSpec: PluginSpec<LawListCMViewPlugin> = {
+    decorations: (value: LawListCMViewPlugin) => value.decorations,
 };
 
-export const lawlistCMPlugin = ViewPlugin.fromClass(
-    LawlistCMPlugin,
+export const lawListCMViewPlugin = ViewPlugin.fromClass(
+    LawListCMViewPlugin,
     pluginSpec
 );
