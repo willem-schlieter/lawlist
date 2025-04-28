@@ -4,8 +4,8 @@
  */
 
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { lawListCMViewPlugin } from 'view_plugin';
-import { store, parsePattern } from 'patterns';
+import { lawListCMViewPlugin } from 'src/view_plugin';
+import { store, parsePattern } from 'src/patterns';
 
 interface LawListSettings {
 	patterns: string[]

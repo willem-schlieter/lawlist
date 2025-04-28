@@ -15,7 +15,7 @@ import {
     ViewUpdate,
     WidgetType,
 } from '@codemirror/view';
-import { parsePattern, store } from "patterns";
+import { parsePattern, store } from "src/patterns";
 import type { SyntaxNode, SyntaxNodeRef } from "@lezer/common";
 
 class LawListEnumeratorWidget extends WidgetType {
