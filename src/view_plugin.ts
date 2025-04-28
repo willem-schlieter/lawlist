@@ -33,7 +33,7 @@ class LawListEnumeratorWidget extends WidgetType {
     }
 }
 
-class LawListCMViewPlugin implements PluginValue {
+export class LawListCMViewPlugin implements PluginValue {
     decorations: DecorationSet;
 
     constructor(view: EditorView) {
@@ -96,12 +96,3 @@ class LawListCMViewPlugin implements PluginValue {
         return builder.finish();
     }
 }
-
-const pluginSpec: PluginSpec<LawListCMViewPlugin> = {
-    decorations: (value: LawListCMViewPlugin) => value.decorations,
-};
-
-export const lawListCMViewPlugin = ViewPlugin.fromClass(
-    LawListCMViewPlugin,
-    pluginSpec
-);

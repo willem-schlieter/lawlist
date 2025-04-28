@@ -15,6 +15,8 @@ In the corresponding field, type in a list style pattern that simply equals the 
 - uppercase letters (A, B, C) and
 - lowercase letters (a, b, c).
 
+Note: Patterns will be ignored after the 26th list item. The list style will then fall back to "1. ".
+
 You can freely add other characters such as parantheses, dots, hyphens…
 
 Once you have made your settings, got to your note and type `1. `&nbsp;to start an ordered list item. As soon as it is recognised, the plugin will change the visual appearance to match your preferences.
