@@ -1,17 +1,13 @@
 /**
- * This just contains some framework stuff and the settings tab.
- * For the actual functionality, see `view_plugin.ts`.
+ * This file contains some framework stuff and the settings tab, plus the actual functionality for Read Mode.
  */
 
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { LawListCMViewPlugin } from 'src/view_plugin';
-import { store, parsePattern } from 'src/patterns';
-import {
-    PluginSpec,
-    ViewPlugin
-} from '@codemirror/view';
+import { PluginSpec, ViewPlugin } from '@codemirror/view';
+import parsePattern from 'src/patterns';
 
-interface LawListSettings {
+export interface LawListSettings {
 	patterns: string[]
 }
 
@@ -34,18 +30,7 @@ export default class LawListPlugin extends Plugin {
 		const pluginSpec: PluginSpec<LawListCMViewPlugin> = {
 			decorations: (value: LawListCMViewPlugin) => value.decorations,
 		};
-		const editorExtension = ViewPlugin.fromClass(
-			LawListCMViewPlugin,
-			pluginSpec
-		);
-		this.registerEditorExtension(editorExtension);
-
-		// this.registerEditorExtension(ViewPlugin.define((view) => new LawListCMViewPlugin(view, this)));
-		// This would be nicer, passing the Obsidian plugin (including the pattern settings) into the view plugin
-		// instead of using the workaround with `store`. But it does not work. If I register the CM editor extension
-		// this way and read the patterns from the passed reference to the obsidian plugin, there is no effect in Edit
-		// Mode - I suppose because the decorations are not found since there is no pluginSpec.
-		// So: Is there any way to pass paramters into the View Plugin constructor while also applying the pluginSpec?
+		this.registerEditorExtension(ViewPlugin.define((view) => new LawListCMViewPlugin(view, this), pluginSpec));
 
 		// Create a stylesheet that will define all the list styles.
 		this.patternStylesheet = document.head.appendChild(document.createElement("style"));
@@ -62,33 +47,40 @@ export default class LawListPlugin extends Plugin {
 	updatePatternStylesheet(empty: boolean) {
 		let sheet = this.patternStylesheet.sheet;
 		if (empty) while (sheet?.cssRules.length) sheet.deleteRule(0);
+
+		// This, for some reason, does not work. (P) Fallback in Edit Mode is the patter with decimal numbering, here it is just the number.
+		// The suffix does not appear…
+		sheet?.insertRule("@counter-style decimal_fallback { system: extends decimal; suffix: \". \"; }");
 		// We iterate over all the indentation levels that can be styled. 
 		for (let level = 0; level < 10; level++) {
 			// For each level, if the is a style pattern defined…
-			if (store.patterns[level]) {
+			if (this.settings.patterns[level]) {
 				// …we implement this pattern into a @counter-style rule…
-				sheet?.insertRule(`@counter-style lawlist_${level} { system: fixed; suffix: ""; symbols: ${Array(26).fill("").map((_, ix) => `"${parsePattern(store.patterns[level] || "1.", ix + 1)}"`).join(" ")}; }`);
-				// …and apply it to all OLs in this level. (Now, indentation levels are counted only by OL ancestors. Nesting levels in ULs will be ignored.)
-				sheet?.insertRule(`${Array(level + 1).fill("ol").join(" ")} { list-style: lawlist_${level}; }`);
+				sheet?.insertRule(`@counter-style lawlist_${level} { system: fixed; suffix: ""; fallback: decimal_fallback; symbols: ${Array(26).fill("").map((_, ix) => `"${parsePattern(this.settings.patterns[level] || "1.", ix + 1)}"`).join(" ")}; }`);
+				// …and apply it to all OLs in this level.
+				// (Indentation levels are - to match what the view plugin does in Edit Mode - counted as the number of LIs in the
+				// parent chain, regardless of whether they are in an OL or UL.)
+				sheet?.insertRule(`${Array(level).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
 			} else {
 				// If there is no style pattern defined for this level, fallback must be provided.
 				// Else, this level would inherit the higher level's style.
-				sheet?.insertRule(`${Array(level + 1).fill("ol").join(" ")} { list-style: decimal; }`)
+				sheet?.insertRule(`${Array(level).fill("li").join(" ")} ol { list-style: decimal; }`)
 			}
 		}
 		// We also need to set the fallback for the indentation levels higher than 9.
-		sheet?.insertRule("ol ol ol ol ol ol ol ol ol ol ol { list-style: decimal; }");
+		// (Generally, the style of the parent level is inherited because of CSS selector specifity.
+		// Thus, this rule will style all levels higher than 9.)
+		sheet?.insertRule("li li li li li li li li li li ol { list-style: decimal; }");
 	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		store.patterns = this.settings.patterns;
+		this.settings.patterns = this.settings.patterns;
 	}
 
 	async saveSettings() {
-		store.patterns = this.settings.patterns; // afaik this should be unnecessary, but seems like it is.
-		this.updatePatternStylesheet(true);
 		await this.saveData(this.settings);
+		this.updatePatternStylesheet(true);
 	}
 }
 

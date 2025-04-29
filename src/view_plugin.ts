@@ -1,6 +1,6 @@
 /**
  * This is a CodeMirror Editor Extension ["View Plugin"](https://docs.obsidian.md/Plugins/Editor/View+plugins).
- * It is loaded in main.ts and contains all the actual functionality.
+ * It is loaded in main.ts and contains the actual functionality for Edit Mode.
  */
 
 import { syntaxTree } from '@codemirror/language';
@@ -9,25 +9,24 @@ import {
     Decoration,
     DecorationSet,
     EditorView,
-    PluginSpec,
     PluginValue,
-    ViewPlugin,
     ViewUpdate,
     WidgetType,
 } from '@codemirror/view';
-import { parsePattern, store } from "src/patterns";
+import parsePattern from "src/patterns";
 import type { SyntaxNode, SyntaxNodeRef } from "@lezer/common";
+import type LawListPlugin from './main';
 
 class LawListEnumeratorWidget extends WidgetType {
-    constructor (private enumerator: number, private indentLevel: number, private customPattern?: string) { super(); }
+    constructor (private enumerator: number, private pattern: string) { super(); }
     toDOM(view: EditorView): HTMLElement {
-        // There is some weird layout stuff going on at the moment. Enumerators are too far left, idk why.
         const div = document.createElement('span');
         
         // For some styling in `styles.css`.
         div.classList.add("lawlist-olchar");
 
-        div.innerText = parsePattern(this.customPattern || store.patterns[this.indentLevel] || "1. ", this.enumerator);
+        // div.innerText = parsePattern(this.customPattern || store.patterns[this.indentLevel] || "1. ", this.enumerator);
+        div.innerText = parsePattern(this.pattern || "1. ", this.enumerator);
 
         return div;
     }
@@ -36,7 +35,7 @@ class LawListEnumeratorWidget extends WidgetType {
 export class LawListCMViewPlugin implements PluginValue {
     decorations: DecorationSet;
 
-    constructor(view: EditorView) {
+    constructor(view: EditorView, private obsPlugin: LawListPlugin) {
         this.decorations = this.buildDecorations(view);
     }
 
@@ -48,9 +47,9 @@ export class LawListCMViewPlugin implements PluginValue {
 
     buildDecorations(view: EditorView): DecorationSet {
         const builder = new RangeSetBuilder<Decoration>();
-
-        // Would be nice if specifying a custom style for one li would affect all lis in that indent level.
-        // const customs: string[] = [];
+        
+        // We have to declare this reference because this.obsPlugin cannot be accessed from within the `enter` closure below.
+        const patterns = this.obsPlugin.settings.patterns;
 
         for (let { from, to } of view.visibleRanges) {
             syntaxTree(view.state).iterate({
@@ -67,27 +66,14 @@ export class LawListCMViewPlugin implements PluginValue {
                         // Custom Styles can be set by writing a pattern in { } at the beginning of the line.
                         // (The pattern notation is hidden and applied as soon as it is recognised.)
                         const custom = ((textNode ? read(textNode) : "").match(/^\{(.*)\}/) || ["", ""])[1];
-                        // // This was for layout debugging / comparison.
-                        // let render = ! (textNode && read(textNode)[0] === "ö");
-                        // if (! render) return;
 
-                        if (custom) {
-                            builder.add(
-                                node.from,
-                                node.to + custom.length + 2,
-                                Decoration.replace({
-                                    widget: new LawListEnumeratorWidget(enumerator, indentLevel -1, custom)
-                                })
-                            );
-                        } else {
-                            builder.add(
-                                node.from,
-                                node.to,
-                                Decoration.replace({
-                                    widget: new LawListEnumeratorWidget(enumerator, indentLevel - 1)
-                                })
-                            );
-                        }
+                        builder.add(
+                            node.from,
+                            node.to + (custom ? custom.length + 2 : 0), // If cutsom is defined, hide it as well.
+                            Decoration.replace({
+                                widget: new LawListEnumeratorWidget(enumerator, custom || patterns[indentLevel - 1])
+                            })
+                        );
                     }
                 }
             });

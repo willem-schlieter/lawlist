@@ -4,12 +4,10 @@
 - [x] Remove settings heading.
 - [x] Change counter color in Edit Mode to list-marker-color.
 - [x] Instead of styling every single LI and cluttering the document with stylesheets, use @counter-style.
-    - Problem: In Read Mode, the OLs' indentation levels are detected by CSS selectors "ol ol ol" and "ol ol ol ol"…
-    - This is why the numbering style differs from the one in Edit Mode. In Edit Mode, indentation level counts OL and UL
-    - parents, in Read Mode, it only counts OL parents.
-- [x] Limit of counters to 15:
+- [ ] Limit of counters to 15:
     - Increased to 26.
     - Handled the case of overflow by falling back to "1. " instead of throwing an uncought exception.
     - Inserted a note in README.
     - (Completely removing this limit would require a major change to how patterns are handled. This shall be left for some later upgrades.)
-- [ ] Enhance plugin <> editor extension communication by passing arguments into the View Plugin constructor - does not work, see main.ts line 43.
+    - (Problem) Inconsistent styling of list items above 26 in Read Mode <> Edit Mode.
+- [x] Enhance plugin <> editor extension communication by passing arguments into the View Plugin constructor.
