@@ -1,13 +1,8 @@
 # Requested changes in review process
-- [x] Move source files to `src`
-- [x] Clean up the generated stylesheet.
-- [x] Remove settings heading.
-- [x] Change counter color in Edit Mode to list-marker-color.
-- [x] Instead of styling every single LI and cluttering the document with stylesheets, use @counter-style.
-- [ ] Limit of counters to 15:
-    - Increased to 26.
-    - Handled the case of overflow by falling back to "1. " instead of throwing an uncought exception.
-    - Inserted a note in README.
-    - (Completely removing this limit would require a major change to how patterns are handled. This shall be left for some later upgrades.)
-    - (Problem) Inconsistent styling of list items above 26 in Read Mode <> Edit Mode.
+- [x] Remove settings heading. (Revise settings in general.)
 - [x] Enhance plugin <> editor extension communication by passing arguments into the View Plugin constructor.
+- [x] Clean up the generated stylesheet.
+- [x] Remove the limit for counters to be rendered (was 15).
+- [x] Change counter color in Edit Mode to `list-marker-color`.
+- [x] Move source files to `src`.
+- [x] Use `@counter-style` rules instead of styling every single LI and cluttering the document with stylesheets.
