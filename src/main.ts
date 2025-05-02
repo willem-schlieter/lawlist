@@ -5,7 +5,7 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
 import { LawListCMViewPlugin } from 'src/view_plugin';
 import { PluginSpec, ViewPlugin } from '@codemirror/view';
-import parsePattern from 'src/patterns';
+import { createCounterStyleRule } from 'src/patterns';
 
 export interface LawListSettings {
 	patterns: string[]
@@ -48,15 +48,13 @@ export default class LawListPlugin extends Plugin {
 		let sheet = this.patternStylesheet.sheet;
 		if (empty) while (sheet?.cssRules.length) sheet.deleteRule(0);
 
-		// This, for some reason, does not work. (P) Fallback in Edit Mode is the patter with decimal numbering, here it is just the number.
-		// The suffix does not appear…
-		sheet?.insertRule("@counter-style decimal_fallback { system: extends decimal; suffix: \". \"; }");
 		// We iterate over all the indentation levels that can be styled. 
 		for (let level = 0; level < 10; level++) {
-			// For each level, if the is a style pattern defined…
+			// For each level, if there is a style pattern defined…
 			if (this.settings.patterns[level]) {
+				let rule = createCounterStyleRule(this.settings.patterns[level]);
 				// …we implement this pattern into a @counter-style rule…
-				sheet?.insertRule(`@counter-style lawlist_${level} { system: fixed; suffix: ""; fallback: decimal_fallback; symbols: ${Array(26).fill("").map((_, ix) => `"${parsePattern(this.settings.patterns[level] || "1.", ix + 1)}"`).join(" ")}; }`);
+				sheet?.insertRule(`@counter-style lawlist_${level} ${rule}`);
 				// …and apply it to all OLs in this level.
 				// (Indentation levels are - to match what the view plugin does in Edit Mode - counted as the number of LIs in the
 				// parent chain, regardless of whether they are in an OL or UL.)
@@ -98,36 +96,29 @@ class LawListSettingsTab extends PluginSettingTab {
 
 		const desc = containerEl.createEl("p");
 		desc.classList.add("lawlist-settings-desc");
-		desc.appendText("Customize the enumeration style for ordered lists. For every indentation level, type in a style pattern containing decimal numbers, roman numbers or letters, which is simply the first enumerator. E.g. use ");
+		desc.appendText("Need help? Check the ");
+		desc.appendChild(createEl("a", { text: "README", href: "https://github.com/willem-schlieter/lawlist" }));
+		desc.appendText("!");
+		desc.appendChild(createEl("br"));
+		desc.appendChild(createEl("br"));
+		desc.appendText("Customize the enumeration style for ordered lists. For every indentation level, simply type in the first enumerator. For example use ");
 		desc.appendChild(createEl("code", { text: "1. " }));
 		desc.appendText(", ");
 		desc.appendChild(createEl("code", { text: "(a) " }));
 		desc.appendText(" or ");
 		desc.appendChild(createEl("code", { text: "i) " }));
 		desc.appendText(".");
-		desc.appendChild(createEl("br"));
-		desc.appendChild(createEl("br"));
-		desc.appendText("Fallback style for layers without specification is ")
-		desc.appendChild(createEl("code", { text: "1. " }));
-		desc.appendText(".");
-		desc.appendChild(createEl("br"));
-		desc.appendChild(createEl("br"));
-		desc.appendText("You can also customize the style for a single list item by typing the style pattern inside curly braces at the start of the list item. Example: ");
-		desc.appendChild(createEl("code", { text: "1. {a. }Text text text." }));
-		desc.appendText(" would be displayed as ");
-		desc.appendChild(createEl("code", { text: "a. Text text text." }));
-
+		
 		for (let i = 0; i < 10; i++) {
 			new Setting(containerEl)
-				.setName(`Level ${i}`)
-				.addText(text => text
-					.setPlaceholder('1. ')
-					.setValue(this.plugin.settings.patterns[i] || "")
-					.onChange(async (value) => {
-						this.plugin.settings.patterns[i] = value || "";
-						await this.plugin.saveSettings();
-					}));
+			.setName(`Level ${i}`)
+			.addText(text => text
+				.setPlaceholder('1. ')
+				.setValue(this.plugin.settings.patterns[i] || "")
+				.onChange(async (value) => {
+					this.plugin.settings.patterns[i] = value || "";
+					await this.plugin.saveSettings();
+				}));
 		}
-
 	}
 }

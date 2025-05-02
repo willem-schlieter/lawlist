@@ -13,7 +13,7 @@ import {
     ViewUpdate,
     WidgetType,
 } from '@codemirror/view';
-import parsePattern from "src/patterns";
+import { renderPattern } from "src/patterns";
 import type { SyntaxNode, SyntaxNodeRef } from "@lezer/common";
 import type LawListPlugin from './main';
 
@@ -26,7 +26,7 @@ class LawListEnumeratorWidget extends WidgetType {
         div.classList.add("lawlist-olchar");
 
         // div.innerText = parsePattern(this.customPattern || store.patterns[this.indentLevel] || "1. ", this.enumerator);
-        div.innerText = parsePattern(this.pattern || "1. ", this.enumerator);
+        div.innerText = renderPattern(this.pattern || "1. ", this.enumerator);
 
         return div;
     }
@@ -69,7 +69,7 @@ export class LawListCMViewPlugin implements PluginValue {
 
                         builder.add(
                             node.from,
-                            node.to + (custom ? custom.length + 2 : 0), // If cutsom is defined, hide it as well.
+                            node.to + (custom ? custom.length + 2 : 0), // If custom is defined, hide it as well.
                             Decoration.replace({
                                 widget: new LawListEnumeratorWidget(enumerator, custom || patterns[indentLevel - 1])
                             })
