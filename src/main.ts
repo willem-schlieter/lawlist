@@ -9,11 +9,13 @@ import { createCounterStyleRule } from 'src/patterns';
 
 export interface LawListSettings {
 	patterns: string[],
+	ul_patterns: string[],
 	loop: boolean
 }
 
 const DEFAULT_SETTINGS: LawListSettings = {
 	patterns: [],
+	ul_patterns: [],
 	loop: true
 }
 
@@ -61,17 +63,23 @@ export default class LawListPlugin extends Plugin {
 				// (Indentation levels are - to match what the view plugin does in Edit Mode - counted as the number of LIs in the
 				// parent chain, regardless of whether they are in an OL or UL.)
 				sheet?.insertRule(`${Array(level).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
+				// sheet?.insertRule(`${Array(level).fill("li").join(" ")} ul { list-style: "${this.settings.ul_patterns[level]}"; }`);
 				if (this.settings.loop) {
 					sheet?.insertRule(`${Array(level + 10).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
 					sheet?.insertRule(`${Array(level + 20).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
+					// sheet?.insertRule(`${Array(level + 10).fill("li").join(" ")} ul { list-style: "${this.settings.ul_patterns[level]}"; }`);
+					// sheet?.insertRule(`${Array(level + 20).fill("li").join(" ")} ul { list-style: "${this.settings.ul_patterns[level]}"; }`);
 				}
 			} else {
 				// If there is no style pattern defined for this level, fallback must be provided.
 				// Else, this level would inherit the higher level's style.
 				sheet?.insertRule(`${Array(level).fill("li").join(" ")} ol { list-style: decimal; }`)
+				// sheet?.insertRule(`${Array(level).fill("li").join(" ")} ul { list-style: outside; }`)
 				if (this.settings.loop) {
 					sheet?.insertRule(`${Array(level + 10).fill("li").join(" ")} ol { list-style: decimal; }`)
 					sheet?.insertRule(`${Array(level + 20).fill("li").join(" ")} ol { list-style: decimal; }`)
+					// sheet?.insertRule(`${Array(level + 10).fill("li").join(" ")} ul { list-style: outside; }`)
+					// sheet?.insertRule(`${Array(level + 20).fill("li").join(" ")} ul { list-style: outside; }`)
 				}
 			}
 		}
@@ -119,6 +127,7 @@ class LawListSettingsTab extends PluginSettingTab {
 		desc.appendChild(createEl("code", { text: "i) " }));
 		desc.appendText(".");
 		
+		new Setting(containerEl).setName("Ordered List Styles").setHeading();
 		for (let i = 0; i < 10; i++) {
 			new Setting(containerEl)
 			.setName(`Level ${i}`)
@@ -130,8 +139,21 @@ class LawListSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		}
+		new Setting(containerEl).setName("Unordered List Styles").setHeading();
+		for (let i = 0; i < 10; i++) {
+			new Setting(containerEl)
+			.setName(`Level ${i}`)
+			.addText(text => text
+				.setPlaceholder('• ')
+				.setValue(this.plugin.settings.ul_patterns[i] || "")
+				.onChange(async (value) => {
+					this.plugin.settings.ul_patterns[i] = value || "";
+					await this.plugin.saveSettings();
+				}));
+		}
+		// new Setting(containerEl).setName("Unordered List Styles").setHeading();
 		new Setting(containerEl)
-		.setName("Loop styles")
+		.setName("Loop styles").setHeading()
 		.setDesc("If enabled, styles will be looped for levels higher than 9, but only until level 29. Otherwise, high levels will default to decimal.")
 		.addToggle(toggle => toggle
 			.setValue(this.plugin.settings.loop)

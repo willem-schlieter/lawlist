@@ -1,7 +1,10 @@
-.lawlist-olchar {
+.lawlist-olchar, .lawlist-ulchar {
     color: var(--list-marker-color);
     padding-left: 18px;
 }
+/* .lawlist-ulchar {
+    font-size: 150%;
+} */
 .lawlist-settings-desc code {
     background-color: #444;
     border-radius: 5px;

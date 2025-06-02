@@ -31,6 +31,16 @@ class LawListEnumeratorWidget extends WidgetType {
         return div;
     }
 }
+class LawListULWidget extends WidgetType {
+    constructor (private listchar: string) { super(); }
+    toDOM(view: EditorView): HTMLElement {
+        const div = document.createElement('span');
+        // For some styling in `styles.css`.
+        div.classList.add("lawlist-ulchar");
+        div.innerText = this.listchar || "• ";
+        return div;
+    }
+}
 
 export class LawListCMViewPlugin implements PluginValue {
     decorations: DecorationSet;
@@ -50,6 +60,7 @@ export class LawListCMViewPlugin implements PluginValue {
         
         // We have to declare this reference because this.obsPlugin cannot be accessed from within the `enter` closure below.
         const patterns = this.obsPlugin.settings.patterns;
+        const ul_patterns = this.obsPlugin.settings.ul_patterns;
         const loop = this.obsPlugin.settings.loop;
 
         for (let { from, to } of view.visibleRanges) {
@@ -58,8 +69,11 @@ export class LawListCMViewPlugin implements PluginValue {
                 to,
                 enter(node) {
                     const read = (node: SyntaxNode | SyntaxNodeRef): string => view.state.doc.sliceString(node.from, node.to);
-                    if (node.type.name.startsWith("formatting_formatting-list_formatting-list-ol_list-")) {
-                        const enumerator = Number.parseInt(view.state.doc.sliceString(node.from, node.to - 2));
+                    const ol = (node.type.name.startsWith("formatting_formatting-list_formatting-list-ol_list-"));
+                    const ul = (node.type.name.startsWith("formatting_formatting-list_formatting-list-ul_list-"));
+                    if (ol || ul) {
+                        const ol_enumerator = Number.parseInt(view.state.doc.sliceString(node.from, node.to - 2)); // NaN if ul.
+                        // const ul_listchar = view.state.doc.sliceString(node.from, node.to - 1); // Useless so far, but maybe later for customization through listchar -/*/+.
                         let indentLevel = Number.parseInt(((node.node.parent?.type.name || "").match(/\d+$/) || [""])[0]) - 1;
                         // Loop for extra high indent levels, but limit to 3 rounds to make it consistent with Read Mode.
                         if (loop) {
@@ -77,13 +91,23 @@ export class LawListCMViewPlugin implements PluginValue {
                             r => r.from < node.to + custom.length + (custom ? 2 : 0) && r.to > node.from - 1
                         ).length) return;
 
-                        builder.add(
-                            node.from,
-                            node.to + (custom ? custom.length + 2 : 0), // If custom is defined, hide it as well.
-                            Decoration.replace({
-                                widget: new LawListEnumeratorWidget(enumerator, custom || patterns[indentLevel])
-                            })
-                        );
+                        if (ul && (custom || ul_patterns[indentLevel])) {
+                            builder.add(
+                                node.from,
+                                node.to + (custom ? custom.length + 2 : 0), // If custom is defined, hide it as well.
+                                Decoration.replace({
+                                    widget: new LawListULWidget(custom || ul_patterns[indentLevel])
+                                })
+                            );
+                        } else if (ol && (custom || patterns[indentLevel])) {
+                            builder.add(
+                                node.from,
+                                node.to + (custom ? custom.length + 2 : 0), // If custom is defined, hide it as well.
+                                Decoration.replace({
+                                    widget: new LawListEnumeratorWidget(ol_enumerator, custom || patterns[indentLevel])
+                                })
+                            );
+                        }
                     }
                 }
             });
