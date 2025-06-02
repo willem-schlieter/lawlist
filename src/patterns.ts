@@ -9,7 +9,7 @@
  * Return a "@counter-style" rule body (`{ … }`) for the given pattern.
  */
 export function createCounterStyleRule(pattern: string): string {
-    let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|1)/) || "")[0];
+    let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|①|1)/) || "")[0];
     if (numberchar) {
         let [prefix, suffix] = pattern.split(RegExp(`${numberchar}(.*)`));
         let system = "decimal";
@@ -20,8 +20,10 @@ export function createCounterStyleRule(pattern: string): string {
             case "i": system = "lower-roman"; break;
             case "AA": system = "alphabetic"; break;
             case "aa": system = "alphabetic"; break;
+            case "①": system = "fixed"; break;
         }
         if (system === "alphabetic") return `{ system: alphabetic; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "aa" "bb" "cc" "dd" "ee" "ff" "gg" "hh" "ii" "jj" "kk" "ll" "mm" "nn" "oo" "pp" "qq" "rr" "ss" "tt" "uu" "vv" "ww" "xx" "yy" "zz"; }`;
+        else if (system === "fixed") return `{ system: fixed; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩" "⑪" "⑫" "⑬" "⑭" "⑮" "⑯" "⑰" "⑱" "⑲" "⑳" "㉑" "㉒" "㉓" "㉔" "㉕" "㉖" "㉗" "㉘" "㉙" "㉚" "㉛" "㉜" "㉝" "㉞" "㉟" "㊱" "㊲" "㊳" "㊴" "㊵" "㊶" "㊷" "㊸" "㊹" "㊺" "㊻" "㊼" "㊽" "㊾" "㊿"; }`;
         else return `{ system: extends ${system}; prefix: "${prefix}"; suffix: "${suffix}"; }`;
     } else return `{ system: cyclic; symbols: "${pattern}"; suffix: ""; }`;
 }
@@ -52,11 +54,19 @@ function romanize (num: number): string {
     return roman;
 }
 
+const circled = [
+    '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
+    '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳',
+    '㉑', '㉒', '㉓', '㉔', '㉕', '㉖', '㉗', '㉘', '㉙', '㉚',
+    '㉛', '㉜', '㉝', '㉞', '㉟', '㊱', '㊲', '㊳', '㊴', '㊵',
+    '㊶', '㊷', '㊸', '㊹', '㊺', '㊻', '㊼', '㊽', '㊾', '㊿'
+];
+
 /**
  * Render a given pattern for the given enumerator number. Return the corresponding counter as string.
  */
 export function renderPattern(pattern: string, e: number): string {
-    let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|1)/) || "")[0];
+    let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|①|1)/) || "")[0];
     if (numberchar) {
         let [prefix, suffix] = pattern.split(RegExp(`${numberchar}(.*)`));
         let number = "" + e;
@@ -67,6 +77,7 @@ export function renderPattern(pattern: string, e: number): string {
             case "i": number = romanize(e).toLowerCase(); break;
             case "AA": number = alphanum(e).repeat(2); break;
             case "aa": number = alphanum(e).toLowerCase().repeat(2); break;
+            case "①": number = circled[e - 1] || ("" + e); break;
         }
         return prefix + number + suffix;
     } else return pattern;

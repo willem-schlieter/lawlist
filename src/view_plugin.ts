@@ -50,6 +50,7 @@ export class LawListCMViewPlugin implements PluginValue {
         
         // We have to declare this reference because this.obsPlugin cannot be accessed from within the `enter` closure below.
         const patterns = this.obsPlugin.settings.patterns;
+        const loop = this.obsPlugin.settings.loop;
 
         for (let { from, to } of view.visibleRanges) {
             syntaxTree(view.state).iterate({
@@ -59,7 +60,12 @@ export class LawListCMViewPlugin implements PluginValue {
                     const read = (node: SyntaxNode | SyntaxNodeRef): string => view.state.doc.sliceString(node.from, node.to);
                     if (node.type.name.startsWith("formatting_formatting-list_formatting-list-ol_list-")) {
                         const enumerator = Number.parseInt(view.state.doc.sliceString(node.from, node.to - 2));
-                        const indentLevel = Number.parseInt(((node.node.parent?.type.name || "").match(/\d+$/) || [""])[0]);
+                        let indentLevel = Number.parseInt(((node.node.parent?.type.name || "").match(/\d+$/) || [""])[0]) - 1;
+                        // Loop for extra high indent levels, but limit to 3 rounds to make it consistent with Read Mode.
+                        if (loop) {
+                            if (indentLevel > 9) indentLevel -= 10;
+                            if (indentLevel > 9) indentLevel -= 10;
+                        }
                         if (Number.isNaN(indentLevel)) throw new Error(`Node indentation level not found.`);
                         
                         const textNode = node.node.nextSibling;
@@ -67,11 +73,15 @@ export class LawListCMViewPlugin implements PluginValue {
                         // (The pattern notation is hidden and applied as soon as it is recognised.)
                         const custom = ((textNode ? read(textNode) : "").match(/^\{(.*)\}/) || ["", ""])[1];
 
+                        if (view.state.selection.ranges.filter(
+                            r => r.from < node.to + custom.length + (custom ? 2 : 0) && r.to > node.from - 1
+                        ).length) return;
+
                         builder.add(
                             node.from,
                             node.to + (custom ? custom.length + 2 : 0), // If custom is defined, hide it as well.
                             Decoration.replace({
-                                widget: new LawListEnumeratorWidget(enumerator, custom || patterns[indentLevel - 1])
+                                widget: new LawListEnumeratorWidget(enumerator, custom || patterns[indentLevel])
                             })
                         );
                     }

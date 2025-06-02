@@ -8,11 +8,13 @@ import { PluginSpec, ViewPlugin } from '@codemirror/view';
 import { createCounterStyleRule } from 'src/patterns';
 
 export interface LawListSettings {
-	patterns: string[]
+	patterns: string[],
+	loop: boolean
 }
 
 const DEFAULT_SETTINGS: LawListSettings = {
-	patterns: []
+	patterns: [],
+	loop: true
 }
 
 export default class LawListPlugin extends Plugin {
@@ -59,16 +61,24 @@ export default class LawListPlugin extends Plugin {
 				// (Indentation levels are - to match what the view plugin does in Edit Mode - counted as the number of LIs in the
 				// parent chain, regardless of whether they are in an OL or UL.)
 				sheet?.insertRule(`${Array(level).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
+				if (this.settings.loop) {
+					sheet?.insertRule(`${Array(level + 10).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
+					sheet?.insertRule(`${Array(level + 20).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
+				}
 			} else {
 				// If there is no style pattern defined for this level, fallback must be provided.
 				// Else, this level would inherit the higher level's style.
 				sheet?.insertRule(`${Array(level).fill("li").join(" ")} ol { list-style: decimal; }`)
+				if (this.settings.loop) {
+					sheet?.insertRule(`${Array(level + 10).fill("li").join(" ")} ol { list-style: decimal; }`)
+					sheet?.insertRule(`${Array(level + 20).fill("li").join(" ")} ol { list-style: decimal; }`)
+				}
 			}
 		}
-		// We also need to set the fallback for the indentation levels higher than 9.
+		// We also need to set the fallback for the indentation levels higher than 9 (which is now, after looping, 29).
 		// (Generally, the style of the parent level is inherited because of CSS selector specifity.
-		// Thus, this rule will style all levels higher than 9.)
-		sheet?.insertRule("li li li li li li li li li li ol { list-style: decimal; }");
+		// Thus, this rule will style all levels higher than 29.)
+		sheet?.insertRule(`li li li li li li li li li li ${this.settings.loop ? "li li li li li li li li li li li li li li li li li li li li": ""} ol { list-style: decimal; }`);
 	}
 
 	async loadSettings() {
@@ -120,5 +130,15 @@ class LawListSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 		}
+		new Setting(containerEl)
+		.setName("Loop styles")
+		.setDesc("If enabled, styles will be looped for levels higher than 9, but only until level 29. Otherwise, high levels will default to decimal.")
+		.addToggle(toggle => toggle
+			.setValue(this.plugin.settings.loop)
+			.onChange(async (value) => {
+				this.plugin.settings.loop = value;
+				await this.plugin.saveSettings();
+			}));
+
 	}
 }
