@@ -57,36 +57,34 @@ export class LawListCMViewPlugin implements PluginValue {
 
     buildDecorations(view: EditorView): DecorationSet {
         const builder = new RangeSetBuilder<Decoration>();
+        const read = (node: SyntaxNode | SyntaxNodeRef): string => view.state.doc.sliceString(node.from, node.to);
         
-        // We have to declare this reference because this.obsPlugin cannot be accessed from within the `enter` closure below.
-        const patterns = this.obsPlugin.settings.patterns;
-        const ul_patterns = this.obsPlugin.settings.ul_patterns;
-        const loop = this.obsPlugin.settings.loop;
+        // We have to declare these references because this.obsPlugin cannot be accessed from within the `enter` closure below.
+        const ol_patterns = this.obsPlugin.ol_patterns;
+        const ul_patterns = this.obsPlugin.ul_patterns;
 
         for (let { from, to } of view.visibleRanges) {
             syntaxTree(view.state).iterate({
                 from,
                 to,
                 enter(node) {
-                    const read = (node: SyntaxNode | SyntaxNodeRef): string => view.state.doc.sliceString(node.from, node.to);
                     const ol = (node.type.name.startsWith("formatting_formatting-list_formatting-list-ol_list-"));
                     const ul = (node.type.name.startsWith("formatting_formatting-list_formatting-list-ul_list-"));
                     if (ol || ul) {
                         const ol_enumerator = Number.parseInt(view.state.doc.sliceString(node.from, node.to - 2)); // NaN if ul.
-                        // const ul_listchar = view.state.doc.sliceString(node.from, node.to - 1); // Useless so far, but maybe later for customization through listchar -/*/+.
+                        
+                        // Useless so far, but maybe later for customization through listchar -/*/+.
+                        // const ul_listchar = view.state.doc.sliceString(node.from, node.to - 1);
+                        
                         let indentLevel = Number.parseInt(((node.node.parent?.type.name || "").match(/\d+$/) || [""])[0]) - 1;
-                        // Loop for extra high indent levels, but limit to 3 rounds to make it consistent with Read Mode.
-                        if (loop) {
-                            if (indentLevel > 9) indentLevel -= 10;
-                            if (indentLevel > 9) indentLevel -= 10;
-                        }
                         if (Number.isNaN(indentLevel)) throw new Error(`Node indentation level not found.`);
                         
-                        const textNode = node.node.nextSibling;
                         // Custom Styles can be set by writing a pattern in { } at the beginning of the line.
                         // (The pattern notation is hidden and applied as soon as it is recognised.)
+                        const textNode = node.node.nextSibling;
                         const custom = ((textNode ? read(textNode) : "").match(/^\{(.*)\}/) || ["", ""])[1];
 
+                        // Skip this node if cursor is touching the enumerator.
                         if (view.state.selection.ranges.filter(
                             r => r.from < node.to + custom.length + (custom ? 2 : 0) && r.to > node.from - 1
                         ).length) return;
@@ -99,12 +97,12 @@ export class LawListCMViewPlugin implements PluginValue {
                                     widget: new LawListULWidget(custom || ul_patterns[indentLevel])
                                 })
                             );
-                        } else if (ol && (custom || patterns[indentLevel])) {
+                        } else if (ol && (custom || ol_patterns[indentLevel])) {
                             builder.add(
                                 node.from,
                                 node.to + (custom ? custom.length + 2 : 0), // If custom is defined, hide it as well.
                                 Decoration.replace({
-                                    widget: new LawListEnumeratorWidget(ol_enumerator, custom || patterns[indentLevel])
+                                    widget: new LawListEnumeratorWidget(ol_enumerator, custom || ol_patterns[indentLevel])
                                 })
                             );
                         }

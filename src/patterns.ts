@@ -12,19 +12,17 @@ export function createCounterStyleRule(pattern: string): string {
     let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|①|1)/) || "")[0];
     if (numberchar) {
         let [prefix, suffix] = pattern.split(RegExp(`${numberchar}(.*)`));
-        let system = "decimal";
+        let rule = `{ system: extends decimal; prefix: "${prefix}"; suffix: "${suffix}"; }`
         switch (numberchar) {
-            case "A": system = "upper-alpha"; break;
-            case "a": system = "lower-alpha"; break;
-            case "I": system = "upper-roman"; break;
-            case "i": system = "lower-roman"; break;
-            case "AA": system = "alphabetic"; break;
-            case "aa": system = "alphabetic"; break;
-            case "①": system = "fixed"; break;
+            case "①": rule = `{ system: fixed; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩" "⑪" "⑫" "⑬" "⑭" "⑮" "⑯" "⑰" "⑱" "⑲" "⑳" "㉑" "㉒" "㉓" "㉔" "㉕" "㉖" "㉗" "㉘" "㉙" "㉚" "㉛" "㉜" "㉝" "㉞" "㉟" "㊱" "㊲" "㊳" "㊴" "㊵" "㊶" "㊷" "㊸" "㊹" "㊺" "㊻" "㊼" "㊽" "㊾" "㊿"; }`; break;
+            case "I": rule = `{ system: extends upper-roman; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
+            case "i": rule = `{ system: extends lower-roman; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
+            case "A": rule = `{ system: extends upper-alpha; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
+            case "a": rule = `{ system: extends lower-alpha; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
+            case "AA": rule = `{ system: alphabetic; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "AA" "BB" "CC" "DD" "EE" "FF" "GG" "HH" "II" "JJ" "KK" "LL" "MM" "NN" "OO" "PP" "QQ" "RR" "SS" "TT" "UU" "VV" "WW" "XX" "YY" "ZZ"; }`; break;
+            case "aa": rule = `{ system: alphabetic; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "aa" "bb" "cc" "dd" "ee" "ff" "gg" "hh" "ii" "jj" "kk" "ll" "mm" "nn" "oo" "pp" "qq" "rr" "ss" "tt" "uu" "vv" "ww" "xx" "yy" "zz"; }`;
         }
-        if (system === "alphabetic") return `{ system: alphabetic; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "aa" "bb" "cc" "dd" "ee" "ff" "gg" "hh" "ii" "jj" "kk" "ll" "mm" "nn" "oo" "pp" "qq" "rr" "ss" "tt" "uu" "vv" "ww" "xx" "yy" "zz"; }`;
-        else if (system === "fixed") return `{ system: fixed; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩" "⑪" "⑫" "⑬" "⑭" "⑮" "⑯" "⑰" "⑱" "⑲" "⑳" "㉑" "㉒" "㉓" "㉔" "㉕" "㉖" "㉗" "㉘" "㉙" "㉚" "㉛" "㉜" "㉝" "㉞" "㉟" "㊱" "㊲" "㊳" "㊴" "㊵" "㊶" "㊷" "㊸" "㊹" "㊺" "㊻" "㊼" "㊽" "㊾" "㊿"; }`;
-        else return `{ system: extends ${system}; prefix: "${prefix}"; suffix: "${suffix}"; }`;
+        return rule;
     } else return `{ system: cyclic; symbols: "${pattern}"; suffix: ""; }`;
 }
 
