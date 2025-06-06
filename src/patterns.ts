@@ -52,6 +52,9 @@ function romanize (num: number): string {
     return roman;
 }
 
+/**
+ * Lookup for circled decimal 1-50.
+ */
 const circled = [
     '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
     '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳',

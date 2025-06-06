@@ -8,7 +8,7 @@ Obsidian natively only supports ordered lists with simple numbering such as `1. 
 
 Download this plugin [directly from within Obsidian](obsidian://show-plugin?id=lawlist).
 
-Otherwise you can use the plugin by downloading this repository, placing it into the vault folder at `.obsidian/plugins` and running `npm install; npm run build`.
+Otherwise you can use the plugin by downloading this [repository](https://github.com/willem-schlieter/lawlist), placing it into the vault folder at `.obsidian/plugins` and running `npm install; npm run build`.
 
 ## How to use this plugin
 
@@ -48,6 +48,6 @@ Of course, the plugin is useful for everyone using lists!
 
 ## Known issues / upgrade path
 
-- **If you are missing a numbering system** (besides decimal, circled decimal, roman, letter, double letter): **This is quite easy to implement, create a feature request or implement it yourself in** [patterns.ts](https://github.com/willem-schlieter/lawlist/blob/master/patterns.ts).
+- **If you are missing a numbering system** (besides decimal, circled decimal, roman, letter, double letter): **This is quite easy to implement, create a feature request or implement it yourself in** [patterns.ts](https://github.com/willem-schlieter/lawlist/blob/master/src/patterns.ts).
 - In Read Mode, in-text custom patterns have no effect, instead, the global setting is used.
 - Custom style patterns (in curly braces) should be applied to a particular document or list, not only to an individual item.

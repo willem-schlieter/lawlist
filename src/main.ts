@@ -98,7 +98,7 @@ export default class LawListPlugin extends Plugin {
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 		this.computePatterns();
-		// this.settings.ol_input = this.settings.ol_input; // ???
+		// this.settings.ol_input = this.settings.ol_input; // What was this for? Should have no effect.
 	}
 
 	computePatterns() {
@@ -113,13 +113,10 @@ export default class LawListPlugin extends Plugin {
 		this.ul_patterns = ul.slice();
 		if (this.settings.loop) while (this.ul_patterns.length < MAX_LEVEL)
 			this.ul_patterns.push(ul[this.ul_patterns.length % ul.length]);
-
-		console.log("Computed patterns:", this.ol_patterns, this.ul_patterns);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-		console.log("Settings saved:", this.settings);
 		this.computePatterns();
 		this.updatePatternStylesheet(true);
 	}
