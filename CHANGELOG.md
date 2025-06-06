@@ -7,7 +7,7 @@
 - [x] Move source files to `src`.
 - [x] Use `@counter-style` rules instead of styling every single LI and cluttering the document with stylesheets.
 
-# Changes for v1.0.0 (June 2025)
+# Changes for v1.1.0 (June 2025)
 - [x] Edit Mode: Skip LI in rendering process and show original source if cursor or selection touching the enumerator.
 - [x] Loop through styles instead of defaulting (if switched on in settings).
     - Due to how styles are assigned in Read Mode (fixed CSS selectors), infinite looping is not possible.
