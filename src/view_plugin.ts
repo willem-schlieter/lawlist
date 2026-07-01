@@ -77,7 +77,11 @@ export class LawListCMViewPlugin implements PluginValue {
                         // const ul_listchar = view.state.doc.sliceString(node.from, node.to - 1);
                         
                         let indentLevel = Number.parseInt(((node.node.parent?.type.name || "").match(/\d+$/) || [""])[0]) - 1;
-                        if (Number.isNaN(indentLevel)) throw new Error(`Node indentation level not found.`);
+                        // Some list markers (e.g. task/checkbox list items) produce a parent node whose
+                        // name has no trailing depth digit, so the indent level can't be determined.
+                        // Skip styling that marker instead of throwing, which would tear down the whole
+                        // ViewPlugin and leave it disabled until the editor reloads (see issue #15).
+                        if (Number.isNaN(indentLevel)) return;
                         
                         // Custom Styles can be set by writing a pattern in { } at the beginning of the line.
                         // (The pattern notation is hidden and applied as soon as it is recognised.)
