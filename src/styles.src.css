@@ -1,0 +1,41 @@
+/*
+ * Hand-written styles. `styles.css` is built from this file by
+ * `scripts/build-styles.mjs`, which appends one block of list rules per
+ * indentation level. Edit this file or that script, never `styles.css`.
+ */
+
+.lawlist-olchar, .lawlist-ulchar {
+    color: var(--list-marker-color);
+    padding-left: 18px;
+}
+
+.lawlist-settings-desc code {
+    background-color: #444;
+    border-radius: 5px;
+}
+
+/*
+ * Numbering systems with no built-in counter style. Patterns written with
+ * 1, I, i, A or a use the built-in styles of the same name instead.
+ */
+
+@counter-style lawlist-circled {
+    system: fixed;
+    symbols: "\2460" "\2461" "\2462" "\2463" "\2464" "\2465" "\2466" "\2467" "\2468" "\2469"
+             "\246A" "\246B" "\246C" "\246D" "\246E" "\246F" "\2470" "\2471" "\2472" "\2473"
+             "\3251" "\3252" "\3253" "\3254" "\3255" "\3256" "\3257" "\3258" "\3259" "\325A"
+             "\325B" "\325C" "\325D" "\325E" "\325F" "\32B1" "\32B2" "\32B3" "\32B4" "\32B5"
+             "\32B6" "\32B7" "\32B8" "\32B9" "\32BA" "\32BB" "\32BC" "\32BD" "\32BE" "\32BF";
+}
+
+@counter-style lawlist-upper-alpha-double {
+    system: alphabetic;
+    symbols: "AA" "BB" "CC" "DD" "EE" "FF" "GG" "HH" "II" "JJ" "KK" "LL" "MM"
+             "NN" "OO" "PP" "QQ" "RR" "SS" "TT" "UU" "VV" "WW" "XX" "YY" "ZZ";
+}
+
+@counter-style lawlist-lower-alpha-double {
+    system: alphabetic;
+    symbols: "aa" "bb" "cc" "dd" "ee" "ff" "gg" "hh" "ii" "jj" "kk" "ll" "mm"
+             "nn" "oo" "pp" "qq" "rr" "ss" "tt" "uu" "vv" "ww" "xx" "yy" "zz";
+}

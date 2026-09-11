@@ -2,12 +2,21 @@
  * This file contains some framework stuff and the settings tab, plus the actual functionality for Read Mode.
  */
 
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, WorkspaceWindow } from 'obsidian';
 import { LawListCMViewPlugin } from 'src/view_plugin';
 import { PluginSpec, ViewPlugin } from '@codemirror/view';
-import { createCounterStyleRule } from 'src/patterns';
+import { createMarkerContent, cssString } from 'src/patterns';
+import { maxLevel } from 'src/config.json';
 
-const MAX_LEVEL = 30; // Maximum indentation level that will be affected by the plugin.
+// Maximum indentation level that will be affected by the plugin. Shared with
+// scripts/build-styles.mjs, which has to emit one block of rules per level.
+const MAX_LEVEL = maxLevel;
+
+/** Set a custom property, or remove it when there is no value for it. */
+function setProperty(style: CSSStyleDeclaration, name: string, value: string | null) {
+	if (value === null) style.removeProperty(name);
+	else style.setProperty(name, value);
+}
 
 export interface LawListSettings {
 	ol_input: string[],
@@ -23,9 +32,10 @@ const DEFAULT_SETTINGS: LawListSettings = {
 
 export default class LawListPlugin extends Plugin {
 	settings: LawListSettings;
-	patternStylesheet: HTMLStyleElement;
 	ol_patterns: string[];
 	ul_patterns: string[];
+	/** Every document we have written custom properties to, so that unload can clear them. */
+	private styledDocs = new Set<Document>();
 
 	async onload() {
 		// Load saved settings
@@ -40,59 +50,64 @@ export default class LawListPlugin extends Plugin {
 		};
 		this.registerEditorExtension(ViewPlugin.define((view) => new LawListCMViewPlugin(view, this), pluginSpec));
 
-		// Create a stylesheet that will define all the list styles.
-		this.patternStylesheet = document.head.appendChild(document.createElement("style"));
-		// Initially fill it.
-		this.updatePatternStylesheet(false);
+		// Popout windows are separate documents and do not inherit the custom
+		// properties written into the main one, so each gets its own copy.
+		this.registerEvent(this.app.workspace.on("window-open", (win: WorkspaceWindow) => {
+			this.styledDocs.add(win.doc);
+			this.writePatterns(win.doc);
+		}));
+		this.registerEvent(this.app.workspace.on("window-close", (win: WorkspaceWindow) => {
+			this.styledDocs.delete(win.doc);
+		}));
+
+		this.app.workspace.onLayoutReady(() => this.applyPatterns());
 	}
 
 	onunload() {
-		// Clean up the stylesheet.
-		document.head.removeChild(this.patternStylesheet);
+		// Hand the list markers back to Obsidian.
+		for (const doc of this.styledDocs) {
+			const style = doc.body.style;
+			for (let level = 0; level < MAX_LEVEL; level++) {
+				style.removeProperty(`--lawlist-ol-${level}`);
+				style.removeProperty(`--lawlist-ul-${level}`);
+				style.removeProperty(`--lawlist-ul-bullet-${level}`);
+			}
+		}
+		this.styledDocs.clear();
 	}
 
-	/** Updates the pattern stylesheet according to the current settings. */
-	updatePatternStylesheet(empty: boolean) {
-		let sheet = this.patternStylesheet.sheet;
-		if (empty) while (sheet?.cssRules.length) sheet.deleteRule(0);
+	/** Applies the current settings to every window that is open. */
+	applyPatterns() {
+		this.styledDocs.add(this.app.workspace.rootSplit.doc);
+		// Picks up popouts that were already open when the plugin was enabled,
+		// which is too late for us to have seen their `window-open`.
+		this.app.workspace.iterateAllLeaves(leaf => this.styledDocs.add(leaf.getContainer().doc));
+		for (const doc of this.styledDocs) this.writePatterns(doc);
+	}
 
-		// We iterate over the first MAX_LEVEL indentation levels (these are the levels that can be affected by the plugin).
+	/**
+	 * Writes one custom property per indentation level onto the body of `doc`.
+	 * The selectors that read them live in `styles.css`; Obsidian loads that file
+	 * for us, and plugins are not allowed to attach stylesheets of their own, so
+	 * the values are all we are free to change at runtime.
+	 *
+	 * A level the user has not configured gets no property at all, which leaves
+	 * the fallback in `styles.css` to hand that level back to Obsidian's own
+	 * marker rather than forcing a style onto it.
+	 */
+	private writePatterns(doc: Document) {
+		const style = doc.body.style;
 		for (let level = 0; level < MAX_LEVEL; level++) {
-			// For each level, if there is a style pattern defined…
-			if (this.ol_patterns[level]) {
-				// …we implement this pattern into a @counter-style rule…
-				let rule = createCounterStyleRule(this.ol_patterns[level]);
-				sheet?.insertRule(`@counter-style lawlist_${level} ${rule}`);
-				// …and apply it to all OLs in this level.
-				// (Indentation levels are - to match what the view plugin does in Edit Mode - counted as the number of LIs in the
-				// parent chain, regardless of whether they are in an OL or UL.)
-				sheet?.insertRule(`.markdown-rendered ${Array(level).fill("li").join(" ")} ol { list-style: lawlist_${level}; }`);
-			} else {
-				// If there is no style pattern defined for this level, fallback must be provided.
-				// Else, this level would inherit the higher level's style.
-				sheet?.insertRule(`.markdown-rendered ${Array(level).fill("li").join(" ")} ol { list-style: decimal; }`)
-			}
-		}
-		// We also set the fallback for the first level beyond MAX_LEVEL.
-		// (Generally, the style of the parent level is inherited because of CSS selector specifity.
-		// Thus, this rule will style all levels beyond MAX_LEVEL.)
-		sheet?.insertRule(`.markdown-rendered ${Array(MAX_LEVEL).fill("li").join(" ")} ol { list-style: decimal; }`);
+			const ol = this.ol_patterns[level];
+			setProperty(style, `--lawlist-ol-${level}`, ol ? createMarkerContent(ol) : null);
 
-		// Now the same for ULs.
-		for (let level = 0; level < MAX_LEVEL; level++) {
-			// But without @counter-style rules, we don't need them for ULs.
-			if (this.ul_patterns[level]) {
-				sheet?.insertRule(`.markdown-rendered ${Array(level).fill("li").join(" ")} ul.has-list-bullet > li::marker { color: var(--list-marker-color); content: "${this.ul_patterns[level]}"; }`);
-				sheet?.insertRule(`.markdown-rendered ${Array(level).fill("li").join(" ")} ul > li > .list-bullet::after { visibility: hidden; }`);
-				// This took me so long to figure out! Obsidian has some strange CSS for ULs that needs to be overridden.
-			}
-			else {
-				sheet?.insertRule(`.markdown-rendered ${Array(level).fill("li").join(" ")} ul.has-list-bullet > li::marker { content: ""; }`);
-				sheet?.insertRule(`.markdown-rendered ${Array(level).fill("li").join(" ")} ul > li > .list-bullet::after { visibility: visible; }`);
-			}
+			// ULs need no counter, just the bullet itself. Obsidian draws its own
+			// bullet in a `.list-bullet` span, which has to be hidden when we
+			// supply one, and left alone when we do not.
+			const ul = this.ul_patterns[level];
+			setProperty(style, `--lawlist-ul-${level}`, ul ? cssString(ul) : null);
+			setProperty(style, `--lawlist-ul-bullet-${level}`, ul ? "hidden" : null);
 		}
-		sheet?.insertRule(`.markdown-rendered ${Array(MAX_LEVEL).fill("li").join(" ")} ul.has-list-bullet > li::marker { content: ""; }`);
-		sheet?.insertRule(`.markdown-rendered ${Array(MAX_LEVEL).fill("li").join(" ")} ul > li > .list-bullet::after { visibility: visible; }`);
 	}
 
 	async loadSettings() {
@@ -118,7 +133,7 @@ export default class LawListPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 		this.computePatterns();
-		this.updatePatternStylesheet(true);
+		this.applyPatterns();
 	}
 }
 
@@ -181,7 +196,7 @@ class LawListSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 		.setName("Loop styles").setHeading()
-		.setDesc(`If enabled, your sequence of styles will be looped for higher levels, but only for ${MAX_LEVEL} levels. Otherwise, unset levels will default to decimal.`)
+		.setDesc(`If enabled, your sequence of styles will be looped for higher levels, but only for ${MAX_LEVEL} levels. Otherwise, unset levels keep Obsidian's own markers.`)
 		.addToggle(toggle => toggle
 			.setValue(this.plugin.settings.loop)
 			.onChange(async (value) => {

@@ -1,29 +1,51 @@
 /**
  * This file contains code for rendering the style patterns set by the user in the settings tab
- * into enumerators for list items, and to create @counter-style CSS rules from patterns.
+ * into enumerators for list items, and to turn patterns into CSS marker content.
  * 
- * To add another numbering system, modify `createCounterStyleRule` (Read Mode) and `renderPattern` (Edit Mode)!
+ * To add another numbering system, add it to `COUNTER_STYLES` (Read Mode) and `renderPattern` (Edit Mode)!
  */
 
 /**
- * Return a "@counter-style" rule body (`{ … }`) for the given pattern.
+ * The `@counter-style` each supported number character maps to. Names that are not
+ * CSS built-ins are declared in `src/styles.src.css`.
  */
-export function createCounterStyleRule(pattern: string): string {
+const COUNTER_STYLES: Record<string, string> = {
+    "1": "decimal",
+    "I": "upper-roman",
+    "i": "lower-roman",
+    "A": "upper-alpha",
+    "a": "lower-alpha",
+    "AA": "lawlist-upper-alpha-double",
+    "aa": "lawlist-lower-alpha-double",
+    "①": "lawlist-circled"
+};
+
+/**
+ * Quote a user-supplied string as a CSS string token. Without this, a pattern
+ * containing a quote or a backslash would break the declaration it lands in.
+ */
+export function cssString(value: string): string {
+    return '"' + value
+        .replace(/\\/g, "\\\\")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, "\\A ")
+        + '"';
+}
+
+/**
+ * Return a CSS `content` value that renders the given pattern, for use as the
+ * marker of a list item. Patterns without a number character become a fixed
+ * string, which is how bullets and unnumbered markers are expressed.
+ */
+export function createMarkerContent(pattern: string): string {
     let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|①|1)/) || "")[0];
-    if (numberchar) {
-        let [prefix, suffix] = pattern.split(RegExp(`${numberchar}(.*)`));
-        let rule = `{ system: extends decimal; prefix: "${prefix}"; suffix: "${suffix}"; }`
-        switch (numberchar) {
-            case "①": rule = `{ system: fixed; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩" "⑪" "⑫" "⑬" "⑭" "⑮" "⑯" "⑰" "⑱" "⑲" "⑳" "㉑" "㉒" "㉓" "㉔" "㉕" "㉖" "㉗" "㉘" "㉙" "㉚" "㉛" "㉜" "㉝" "㉞" "㉟" "㊱" "㊲" "㊳" "㊴" "㊵" "㊶" "㊷" "㊸" "㊹" "㊺" "㊻" "㊼" "㊽" "㊾" "㊿"; }`; break;
-            case "I": rule = `{ system: extends upper-roman; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
-            case "i": rule = `{ system: extends lower-roman; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
-            case "A": rule = `{ system: extends upper-alpha; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
-            case "a": rule = `{ system: extends lower-alpha; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
-            case "AA": rule = `{ system: alphabetic; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "AA" "BB" "CC" "DD" "EE" "FF" "GG" "HH" "II" "JJ" "KK" "LL" "MM" "NN" "OO" "PP" "QQ" "RR" "SS" "TT" "UU" "VV" "WW" "XX" "YY" "ZZ"; }`; break;
-            case "aa": rule = `{ system: alphabetic; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "aa" "bb" "cc" "dd" "ee" "ff" "gg" "hh" "ii" "jj" "kk" "ll" "mm" "nn" "oo" "pp" "qq" "rr" "ss" "tt" "uu" "vv" "ww" "xx" "yy" "zz"; }`;
-        }
-        return rule;
-    } else return `{ system: cyclic; symbols: "${pattern}"; suffix: ""; }`;
+    if (!numberchar) return cssString(pattern);
+    let [prefix, suffix] = pattern.split(RegExp(`${numberchar}(.*)`));
+    return [
+        prefix && cssString(prefix),
+        `counter(list-item, ${COUNTER_STYLES[numberchar]})`,
+        suffix && cssString(suffix)
+    ].filter(Boolean).join(" ");
 }
 
 /**

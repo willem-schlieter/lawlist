@@ -8,6 +8,7 @@
     "target": "ES6",
     "allowJs": true,
     "noImplicitAny": true,
+    "resolveJsonModule": true,
     "moduleResolution": "node",
     "importHelpers": true,
     "isolatedModules": true,

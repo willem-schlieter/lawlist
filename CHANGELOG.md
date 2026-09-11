@@ -1,3 +1,22 @@
+# Read Mode without a runtime stylesheet
+
+Obsidian does not allow plugins to create and attach `style` elements, which is
+what the Read Mode styling was built on.
+
+- [x] Move every selector into `styles.css`, which Obsidian loads for us.
+  `scripts/build-styles.mjs` generates one block of rules per indentation level
+  from `src/styles.src.css`.
+- [x] Express list styles as `::marker` content driven by one custom property per
+  level, written onto the body by `main.ts`. Only the values change at runtime.
+- [x] Declare the three non-built-in numbering systems (circled, `AA`, `aa`) as
+  static `@counter-style` rules instead of building them per level.
+- [x] Apply the properties to popout windows too, which the old stylesheet never
+  reached.
+- [x] Escape user input before it goes into CSS. A pattern containing `"` or `\`
+  used to break the rule it landed in.
+- [x] Levels past the configured depth now keep Obsidian's own markers rather
+  than being forced to decimal, so themes and `--list-numbered-style` still apply.
+
 # Requested changes in review process
 - [x] Remove settings heading. (Revise settings in general.)
 - [x] Enhance plugin <> editor extension communication by passing arguments into the View Plugin constructor.
