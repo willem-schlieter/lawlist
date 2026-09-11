@@ -20,25 +20,22 @@ import type LawListPlugin from './main';
 class LawListEnumeratorWidget extends WidgetType {
     constructor (private enumerator: number, private pattern: string) { super(); }
     toDOM(view: EditorView): HTMLElement {
-        const div = document.createElement('span');
-        
-        // For some styling in `styles.css`.
-        div.classList.add("lawlist-olchar");
-
-        // div.innerText = parsePattern(this.customPattern || store.patterns[this.indentLevel] || "1. ", this.enumerator);
-        div.innerText = renderPattern(this.pattern || "1. ", this.enumerator);
-
-        return div;
+        // `createSpan` builds in the active document, which is the wrong one when the
+        // editor sits in a popout window, so adopt the result into the editor's own.
+        // The class is styled in `styles.css`.
+        return view.dom.doc.adoptNode(createSpan({
+            cls: "lawlist-olchar",
+            text: renderPattern(this.pattern || "1. ", this.enumerator)
+        }));
     }
 }
 class LawListULWidget extends WidgetType {
     constructor (private listchar: string) { super(); }
     toDOM(view: EditorView): HTMLElement {
-        const div = document.createElement('span');
-        // For some styling in `styles.css`.
-        div.classList.add("lawlist-ulchar");
-        div.innerText = this.listchar || "• ";
-        return div;
+        return view.dom.doc.adoptNode(createSpan({
+            cls: "lawlist-ulchar",
+            text: this.listchar || "• "
+        }));
     }
 }
 
@@ -63,7 +60,7 @@ export class LawListCMViewPlugin implements PluginValue {
         const ol_patterns = this.obsPlugin.ol_patterns;
         const ul_patterns = this.obsPlugin.ul_patterns;
 
-        for (let { from, to } of view.visibleRanges) {
+        for (const { from, to } of view.visibleRanges) {
             syntaxTree(view.state).iterate({
                 from,
                 to,
@@ -76,7 +73,7 @@ export class LawListCMViewPlugin implements PluginValue {
                         // Useless so far, but maybe later for customization through listchar -/*/+.
                         // const ul_listchar = view.state.doc.sliceString(node.from, node.to - 1);
                         
-                        let indentLevel = Number.parseInt(((node.node.parent?.type.name || "").match(/\d+$/) || [""])[0]) - 1;
+                        const indentLevel = Number.parseInt(((node.node.parent?.type.name || "").match(/\d+$/) || [""])[0]) - 1;
                         if (Number.isNaN(indentLevel)) throw new Error(`Node indentation level not found.`);
                         
                         // Custom Styles can be set by writing a pattern in { } at the beginning of the line.
