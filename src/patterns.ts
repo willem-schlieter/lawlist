@@ -8,13 +8,15 @@
 
 /**
  * Return a "@counter-style" rule body (`{ … }`) for the given pattern.
+ * Add "一" By Captain Nemo 支持中文编号
  */
 export function createCounterStyleRule(pattern: string): string {
-    let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|①|1)/) || "")[0];
+    let numberchar = (pattern.match(/(a{1,2}|A{1,2}|i|I|①|一|1)/) || "")[0];
     if (numberchar) {
         let [prefix, suffix] = pattern.split(RegExp(`${numberchar}(.*)`));
         let rule = `{ system: extends decimal; prefix: "${prefix}"; suffix: "${suffix}"; }`
         switch (numberchar) {
+            case "一": rule = `{ system: extends cjk-ideographic; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
             case "①": rule = `{ system: fixed; prefix: "${prefix}"; suffix: "${suffix}"; symbols: "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩" "⑪" "⑫" "⑬" "⑭" "⑮" "⑯" "⑰" "⑱" "⑲" "⑳" "㉑" "㉒" "㉓" "㉔" "㉕" "㉖" "㉗" "㉘" "㉙" "㉚" "㉛" "㉜" "㉝" "㉞" "㉟" "㊱" "㊲" "㊳" "㊴" "㊵" "㊶" "㊷" "㊸" "㊹" "㊺" "㊻" "㊼" "㊽" "㊾" "㊿"; }`; break;
             case "I": rule = `{ system: extends upper-roman; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
             case "i": rule = `{ system: extends lower-roman; prefix: "${prefix}"; suffix: "${suffix}"; }`; break;
@@ -55,38 +57,50 @@ function romanize (num: number): string {
 }
 
 /**
- * 【新增】将阿拉伯数字转换为中文数字。
- *
- * 作用：
+ * Add by Captain Nemo With ChatGPT
+ * 将阿拉伯数字转换为中文数字。
+ *  
+ * 支持 1～9999：
  *   1 → 一
- *   2 → 二
- *   ...
  *   10 → 十
  *   11 → 十一
  *   20 → 二十
  *   21 → 二十一
- *
- * 当前用于 Live Preview 中的中文编号。
+ *   100 → 一百
+ *   101 → 一百零一
+ *   110 → 一百一十
+ *   1000 → 一千
+ *   1001 → 一千零一
+ *   1010 → 一千零一十
+ *   9999 → 九千九百九十九
  */
 function chineseNumeral (num: number): string {
     const numerals = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    const units = ['', '十', '百', '千'];
 
-    // 目前支持 1～99；超出范围时暂时返回阿拉伯数字。
-    if (num < 1 || num > 99) return "" + num;
+    if (num < 1 || num > 9999) return "" + num;
 
-    // 1～9
-    if (num < 10) {
-        return numerals[num];
+    let result = '';
+    const digits = String(num).split('').map(Number);
+
+    for (let i = 0; i < digits.length; i++) {
+        const digit = digits[i];
+        const position = digits.length - i - 1;
+
+        if (digit === 0) {
+            if (result !== '' && digits.slice(i + 1).some(d => d !== 0)) {
+                result += '零';
+            }
+        } else {
+            // 十位的 1 不写“一十”，例如 10 → 十，11 → 十一
+            if (!(digit === 1 && position === 1 && result === '')) {
+                result += numerals[digit];
+            }
+            result += units[position];
+        }
     }
 
-    // 10～19
-    if (num < 20) {
-        return '十' + (num % 10 === 0 ? '' : numerals[num % 10]);
-    }
-
-    // 20～99
-    return numerals[Math.floor(num / 10)] + '十'
-        + (num % 10 === 0 ? '' : numerals[num % 10]);
+    return result;
 }
 
 /**
